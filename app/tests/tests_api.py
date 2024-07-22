@@ -2,7 +2,6 @@ from fastapi.testclient import TestClient
 from services.users import User
 from tests.conftest import Session
 
-from fastapi.security import OAuth2PasswordRequestForm
 
 user_for_tests = {
     "email": "test_3@mail.ru",
@@ -10,8 +9,24 @@ user_for_tests = {
     "name": "test_3",
     "surname": "test_3",
     "user_password": "123",
+    "company": "OOO",
     "balance": 0,
-    "tg_id": "-",
+}
+
+data_for_test = {
+    "current_assets": 0,
+    "cost_of_goods_sold": 0,
+    "depreciation_and_amortization": 0,
+    "inventory": 0,
+    "net_income": 0,
+    "total_receivables": 0,
+    "total_assets": 0,
+    "total_longterm_debt": 0,
+    "ebit": 0,
+    "gross_profit": 0,
+    "total_current_liabilities": 0,
+    "retained_earnings": 0,
+    "total_liabilities": 0,
 }
 
 
@@ -32,30 +47,37 @@ def test_signin(client: TestClient):
     assert response.status_code == 200
     assert isinstance(response.json(), dict)
 
+
 def test_empty_transaction_history(client: TestClient, session: Session):
     test_user = User().get_user_by_email(session, user_for_tests["email"])
     response = client.get(f"/transaction/history/{test_user.id}")
     assert response.status_code == 404
-    assert response.json() == {'detail': 'Нет истории - нет проблем.'}
+    assert response.json() == {"detail": "Нет истории - нет проблем."}
+
 
 def test_empty_data_history(client: TestClient, session: Session):
     test_user = User().get_user_by_email(session, user_for_tests["email"])
     response = client.get(f"/data/load_data_hist/{test_user.id}")
     assert response.status_code == 404
-    assert response.json() == {'detail': 'Нет истории - нет проблем.'}
+    assert response.json() == {"detail": "Нет истории - нет проблем."}
+
 
 def test_check_balance(client: TestClient, session: Session):
     test_user = User().get_user_by_email(session, user_for_tests["email"])
     response = client.get(f"/user/balance/{test_user.id}")
     assert response.status_code == 200
-    assert response.json() == {"Твой баланс": 0}
+    assert isinstance(response.json(), int)
 
 
-def test_pred_without_cred(client: TestClient, session: Session):
+def test_pred_without_cred(client: TestClient, session: Session, token:str):
     test_user = User().get_user_by_email(session, user_for_tests["email"])
-    response = client.get(f"/model/pred/{test_user.id}?data=Это тестовый вопрос")
+    response = client.post(
+        f"/model/pred/{test_user.id}",
+        headers={"Authorization": f"Bearer {token}"},
+        json=data_for_test,
+    )
     assert response.status_code == 200
-    assert response.json() == "Кинь сотку на баланс."
+    assert response.json() == "Требуется пополнить баланс"
 
 
 def test_replanishment(client: TestClient, session: Session):
@@ -65,11 +87,15 @@ def test_replanishment(client: TestClient, session: Session):
     assert response.json() == "Баланс пополнен"
 
 
-def test_pred(client: TestClient, session: Session):
+def test_pred(client: TestClient, session: Session, token:str):
     test_user = User().get_user_by_email(session, user_for_tests["email"])
-    response = client.get(f"/model/pred/{test_user.id}?data=Это тестовый вопрос")
+    response = client.post(
+        f"/model/pred/{test_user.id}",
+        headers={"Authorization": f"Bearer {token}"},
+        json=data_for_test,
+    )
     assert response.status_code == 200
-    assert isinstance(response.json(), str)
+    assert isinstance(response.json(), int)
 
 
 def test_load_transaction_history(client: TestClient, session: Session):

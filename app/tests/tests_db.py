@@ -1,25 +1,23 @@
 from services.users import User
-from conftest import Session
+from tests.conftest import Session
 
-
-from services.users import User
 from services.transaction import Transaction
 
 test_transaction = Transaction()
-test_user = User(
-    email="test_2@mail.ru",
-    phone="+7777777777",
-    user_name="test_2",
-    user_surname="test_2",
-    user_password="123",
-    balance=0,
-    tg_id="-",
-)
+user_for_tests = {
+    "email": "test_3@mail.ru",
+    "phone": "+7777777",
+    "name": "test_3",
+    "surname": "test_3",
+    "user_password": "123",
+    "company": "OOO",
+    "balance": 0,
+}
 
 
 def test_create_user(session: Session):
     try:
-        test_user.user_add(session)
+        User().user_add(session, user_data=user_for_tests)
         assert True
     except Exception as e:
         assert False, e
@@ -27,6 +25,7 @@ def test_create_user(session: Session):
 
 def test_create_transaction(session: Session):
     try:
+        test_user = User().get_user_by_email(session, email=user_for_tests["email"])
         test_transaction.replanishment(session, user_id=test_user.user_id, value=100)
         assert True
     except Exception as e:
@@ -35,6 +34,7 @@ def test_create_transaction(session: Session):
 
 def test_delete_history(session: Session):
     try:
+        test_user = User().get_user_by_email(session, email=user_for_tests["email"])
         test_transaction.del_history(session, user_id=test_user.user_id)
         assert True
     except Exception as e:
@@ -43,7 +43,8 @@ def test_delete_history(session: Session):
 
 def test_delete_user(session: Session):
     try:
-        test_user.user_del(session)
+        test_user = User().get_user_by_email(session, email=user_for_tests["email"])
+        test_user.user_del(session, email=user_for_tests["email"])
         assert True
     except Exception as e:
         assert False, e
