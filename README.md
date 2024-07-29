@@ -31,8 +31,8 @@
 
 1. **Клонируйте репозиторий**:
     ```sh
-    git clone https://git.lab.karpov.courses/pave-sokolov/mfdp
-    cd mfdp
+    git clone https://github.com/SPI315/bankruptcy_predictor
+    cd bankruptcy_predictor
     ```
 
 2. **Создайте файл `.env`** по образцу файла `.env.example`
